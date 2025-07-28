@@ -1155,6 +1155,9 @@ func RegisterOpenAPITools(server *mcpserver.MCPServer, ops []OpenAPIOperation, d
 			if err != nil {
 				return nil, err
 			}
+			// set custom headers from context if available
+			setHeadersFromCtx(ctx, httpReq)
+
 			if len(body) > 0 && requestContentType != "" {
 				httpReq.Header.Set("Content-Type", requestContentType)
 			}
@@ -1657,4 +1660,19 @@ func RegisterOpenAPITools(server *mcpserver.MCPServer, ops []OpenAPIOperation, d
 	}
 
 	return toolNames
+}
+
+// setHeadersFromCtx sets HTTP request headers from the context if available.
+type ContextKeyHeaders string
+
+const CustomReqHeaders ContextKeyHeaders = "custom-request-headers"
+
+func setHeadersFromCtx(ctx context.Context, httpReq *http.Request) {
+	if ctx != nil {
+		if headers, ok := ctx.Value(CustomReqHeaders).(map[string]string); ok {
+			for k, v := range headers {
+				httpReq.Header.Set(k, v)
+			}
+		}
+	}
 }
