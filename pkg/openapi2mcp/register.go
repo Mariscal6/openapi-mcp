@@ -1663,15 +1663,19 @@ func RegisterOpenAPITools(server *mcpserver.MCPServer, ops []OpenAPIOperation, d
 }
 
 // setHeadersFromCtx sets HTTP request headers from the context if available.
-type ContextKeyHeaders string
+type ContextCookieHeader string
 
-const CustomReqHeaders ContextKeyHeaders = "custom-request-headers"
+const CustomCookieHeaders ContextCookieHeader = "custom-cookie-headers"
 
 func setHeadersFromCtx(ctx context.Context, httpReq *http.Request) {
 	if ctx != nil {
-		if headers, ok := ctx.Value(CustomReqHeaders).(map[string]string); ok {
-			for k, v := range headers {
-				httpReq.Header.Set(k, v)
+		if headers, ok := ctx.Value(CustomCookieHeaders).(map[string]string); ok {
+			cookieHeaders := []string{}
+			for name, value := range headers {
+				cookieHeaders = append(cookieHeaders, fmt.Sprintf("%s=%s", name, value))
+			}
+			if len(cookieHeaders) > 0 {
+				httpReq.Header.Set("Cookie", strings.Join(cookieHeaders, "; "))
 			}
 		}
 	}
